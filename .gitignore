@@ -1,0 +1,11 @@
+.DS_STORE
+node_modules
+.env
+dump.rdb
+.prettierrc.json
+package-lock.json
+redacted
+cache
+artifacts
+
+scripts/dumpSnipes/data/dexscreener.json
