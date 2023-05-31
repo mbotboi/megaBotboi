@@ -34,7 +34,6 @@ erc20.eth.getTransactionCount(myAddress).then(nonce => {
         myAddress: myAddress,
         to: to,
         amount: 10 * 10 ** 6,
-        nonce: 1,
         pkey: pkey,
         nonce: nonce
     }).then(txHash => console.log(txHash))
