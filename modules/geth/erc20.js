@@ -15,30 +15,31 @@ exports.ERC20 = class EC20 {
 
     getBalance = async (walletAddress) => {
         const params = [walletAddress]
-        const data = await this.eth.getContractData({ address: this.tokenAddress, functionName: "balanceOf", params: params, abi: ABI })
+        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "balanceOf", params: params, abi: ABI })
         return data[0]
     }
 
     allowance = async (myAddress, spender) => {
         const params = [myAddress, spender]
-        const data = await this.eth.getContractData({ address: this.tokenAddress, functionName: "allowance", params: params, abi: ABI })
+        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "allowance", params: params, abi: ABI })
         return data[0]
     }
 
     decimals = async () => {
-        const data = await this.eth.getContractData({ address: this.tokenAddress, functionName: "decimals", params: [], abi: ABI })
+        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "decimals", params: [], abi: ABI })
         return data
     }
 
     symbol = async () => {
-        const data = await this.eth.getContractData({ address: this.tokenAddress, functionName: "symbol", params: [], abi: ABI })
+        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "symbol", params: [], abi: ABI })
         return data
     }
 
     //WRITE FUNCTIONS----------------------------------------------------------------
-
-    approve = async ({ myAddress, spender, nonce, pkey }) => {
-        const params = [spender, maxUint]
+    //this function will approve max if not given
+    approve = async ({ myAddress, spender, amount, nonce, pkey }) => {
+        var amountToApprove = !amount ? maxUint : amount
+        const params = [spender, amountToApprove]
         const inputs = {
             functionName: "approve",
             abi: ABI,

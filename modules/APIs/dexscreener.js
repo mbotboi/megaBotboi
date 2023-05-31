@@ -1,5 +1,6 @@
 const axios = require('axios')
 const { saveToJSON } = require('../../utils/utils')
+
 exports.getTokenData = async (addresses) => {
     var addressString = "";
     addresses.map(addr => addressString = addressString + addr + ',')

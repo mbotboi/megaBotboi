@@ -1,11 +1,18 @@
 const Websocket = require('ws')
 const ethers = require('ethers')
 var Accounts = require('web3-eth-accounts');
+const fs = require('fs');
 
 exports.SequencerListener = class SequencerListener {
-    constructor() {
+    constructor(_saveRawMessages) {
         this.SEQUENCER_URL = "wss://arb1.arbitrum.io/feed"
         this.txLink = "https://arbiscan.io/tx/"
+        this.accounts = new Accounts();
+        if (!_saveRawMessages) {
+            this.saveRawMessages = false
+        }
+        this.saveRawMessages = _saveRawMessages;
+        this.allL2Msgs = []
     }
 
     listener = async (callback) => {
@@ -17,6 +24,11 @@ exports.SequencerListener = class SequencerListener {
         })
         client.on("message", (sequencerMsg => {
             const msg = JSON.parse(sequencerMsg)
+
+            if (this.saveRawMessages) {
+                this.allL2Msgs.push(msg)
+                fs.writeFileSync('./scripts/uniV3Sniper/data/l2Msgs.json', JSON.stringify(this.allL2Msgs));
+            }
             const messages = msg.messages
             if (!messages) return
 
@@ -53,8 +65,11 @@ exports.SequencerListener = class SequencerListener {
                     ])
                 }
                 tx.from = from
+                if (!tx.from) console.log(tx.link)
                 return tx
             } catch (e) {
+                console.log(rawTx)
+                console.log('txHash', ethers.utils.keccak256(rawTx))
                 console.error(e.message)
             }
         }
@@ -64,7 +79,6 @@ exports.SequencerListener = class SequencerListener {
         try {
             const decoded = ethers.utils.RLP.decode(rawTx)
             const possibleTxHash = ethers.utils.keccak256(rawTx)
-
             const tx = {
                 raw: rawTx,
                 nonce: decoded[0],
@@ -72,7 +86,7 @@ exports.SequencerListener = class SequencerListener {
                 gas: decoded[2],
                 to: decoded[3],
                 value: decoded[4],
-                data: decoded[5],
+                input: decoded[5],
                 v: decoded[6],
                 r: decoded[7],
                 s: decoded[8],
@@ -101,7 +115,7 @@ exports.SequencerListener = class SequencerListener {
                 gas: decoded[4],
                 to: decoded[5],
                 value: decoded[6],
-                data: decoded[7],
+                input: decoded[7],
                 accessList: decoded[8],
                 v: decoded[9],
                 r: decoded[10],
@@ -116,8 +130,13 @@ exports.SequencerListener = class SequencerListener {
     }
 
     _getAddressFromRawTxAsync = async (raw) => {
-        var accounts = new Accounts();
-        const address = accounts.recoverTransaction(raw)
-        return address
+        try {
+            const address = this.accounts.recoverTransaction(raw)
+            return address
+        } catch (e) {
+            // console.error("Could not get address from VRS and raw tx bytes")
+            return
+        }
+
     }
 }

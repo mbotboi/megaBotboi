@@ -39,45 +39,38 @@ const decodeData = (data, outputTypes) => {
     // console.time('decoding data')
     const outputs = data.split('0x')[1]
 
-    if (outputTypes[0].internalType === 'struct GrailMulticall.poolData[]') {
-        return decodeGrailMulticall(outputs, outputTypes)
-    } else {
-        const decoded = outputTypes.map((type, i) => {
+    const decoded = outputTypes.map((type, i) => {
 
-            if (type.type == "string") {
-                var offset = outputs.slice(0, 64)
-                offset = "0x" + offset.replace(/^0+/, '')
-                offset = parseInt(offset, 16) * 2
+        if (type.type == "string") {
+            var offset = outputs.slice(0, 64)
+            offset = "0x" + offset.replace(/^0+/, '')
+            offset = parseInt(offset, 16) * 2
 
-                var length = outputs.slice(offset, offset + 64)
-                length = "0x" + length.replace(/^0+/, '')
-                length = parseInt(length, 16) * 2
+            var length = outputs.slice(offset, offset + 64)
+            length = "0x" + length.replace(/^0+/, '')
+            length = parseInt(length, 16) * 2
 
-                var str = outputs.slice(offset + 64, offset + (64 * 2))
-                str = str.replace(/\.?0*$/, '');
-                const buf = Buffer.from(str, "hex")
-                str = buf.toString("utf8")
-                return str
-            } else {
+            var str = outputs.slice(offset + 64, offset + (64 * 2))
+            str = str.replace(/\.?0*$/, '');
+            const buf = Buffer.from(str, "hex")
+            str = buf.toString("utf8")
+            return str
+        } else {
+            const endIdx = 64 * (i + 1)
+            var currentOutput = outputs.slice(64 * i, endIdx)
+            currentOutput = "0x" + currentOutput.replace(/^0+/, '')
 
-                const endIdx = 64 * (i + 1)
-                var currentOutput = outputs.slice(64 * i, endIdx)
-                currentOutput = "0x" + currentOutput.replace(/^0+/, '')
-
-                if (type.type == "address") {
-                } else if (type.type.includes("int")) {
-                    currentOutput = parseInt(currentOutput, 16)
-                } else if (type.type == "bool") {
-                    currentOutput = true ? currentOutput == "0x1" : currentOutput == "0x0"
-                }
-                return currentOutput
+            if (type.type == "address") {
+            } else if (type.type.includes("int")) {
+                currentOutput = parseInt(currentOutput, 16)
+            } else if (type.type == "bool") {
+                currentOutput = true ? currentOutput == "0x1" : currentOutput == "0x0"
             }
-        })
-        // console.timeEnd('decoding data')
-        return decoded
-    }
-
-
+            return currentOutput
+        }
+    })
+    // console.timeEnd('decoding data')
+    return decoded
 }
 exports.decodeData = decodeData
 
