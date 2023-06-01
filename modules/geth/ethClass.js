@@ -55,6 +55,8 @@ exports.Eth = class Eth {
                 timeout: 2000,
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             })
+        } else {
+            throw new Error('please initialise chain with the appropriate value')
         }
     }
     //CLASS? FUNCTIONS----------------------------------------------------------------
