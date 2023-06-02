@@ -7,6 +7,12 @@ exports.getResultFromHex = (resp) => {
     return parseInt(result, 16)
 }
 
+/**
+ * 
+ * @param {*} num 
+ * @param {*} decimals if no decimal is passed, it will convert the raw number to string
+ * @returns 
+ */
 exports.toHex = (num, decimals) => {
     var hex = '0x'
     if (!decimals) {
