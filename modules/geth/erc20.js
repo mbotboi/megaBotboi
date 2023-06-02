@@ -9,29 +9,37 @@ exports.ERC20 = class EC20 {
         this.chain = chain
         this.rpc = rpc
         this.tokenAddress = tokenAddress
-
         this.eth = new Eth(chain, rpc)
+        this.abi = ABI
     }
+
+    //Class Functions --------------------------------------------------------
+    changeToken = (tokenAddress) => {
+        this.tokenAddress = tokenAddress
+     }
+
+
+    //Read Functions --------------------------------------------------------
 
     getBalance = async (walletAddress) => {
         const params = [walletAddress]
-        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "balanceOf", params: params, abi: ABI })
+        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "balanceOf", params: params, abi: this.abi })
         return data[0]
     }
 
     allowance = async (myAddress, spender) => {
         const params = [myAddress, spender]
-        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "allowance", params: params, abi: ABI })
+        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "allowance", params: params, abi: this.abi })
         return data[0]
     }
 
     decimals = async () => {
-        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "decimals", params: [], abi: ABI })
+        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "decimals", params: [], abi: this.abi })
         return data
     }
 
     symbol = async () => {
-        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "symbol", params: [], abi: ABI })
+        const data = await this.eth.getContractData({ to: this.tokenAddress, functionName: "symbol", params: [], abi: this.abi })
         return data
     }
 
@@ -42,7 +50,7 @@ exports.ERC20 = class EC20 {
         const params = [spender, amountToApprove]
         const inputs = {
             functionName: "approve",
-            abi: ABI,
+            abi: this.abi,
             value: 0,
             to: this.tokenAddress,
             from: myAddress,
@@ -58,7 +66,7 @@ exports.ERC20 = class EC20 {
         const params = [to, amount]
         const inputs = {
             functionName: "transfer",
-            abi: ABI,
+            abi: this.abi,
             value: 0,
             to: this.tokenAddress,
             from: myAddress,
