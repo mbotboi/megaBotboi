@@ -1,12 +1,17 @@
 # MEGA BOTBOI MODULE; My baby
 
+**things to note**
+- use ethers BN for ints
+OR use ./modules/geth/helper theres a toHex(number, decimal) function. if no decimals arg passed, raw number will be converted
+- otherwise an overflow error will happen on numbers bigger than 0.001 * 10 **18 (because of ethers)
+
 ### How To Use
 -  add ```"megabotboi": "file:<relative path from project root directory>"``` into dependencies in package.json
 - Essentially there are 2 important files, erc20.js and ethClass.js , both are in /modules/geth
 - theres also /module/APIs/1inch.js
   - 1inch.js essentially uses 1inch api to swap, but barely used it so pls test with caution
 - and /module/APIs/dexscreener.js which is just a simple api call i used lol
-- 
+
 **example ethClass instance and usage**
 ```
 const { Eth } = require('megabotboi/modules/geth/ethClass')

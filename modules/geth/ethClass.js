@@ -227,21 +227,11 @@ exports.Eth = class Eth {
         const txHash = await this.sendRawTransaction('0x' + serializedTx.toString('hex'))
         return txHash
     }
-
-    /**
-     * 
-     * @dev if transaction data is provided, then params is not needed and no encoding is done
-     * @returns 
-     */
-    sendTransaction = async ({ functionName, abi, value, to, from, params, nonce, pkey, data }) => {
-        // console.time("tx encoding and signing")
+    getSerialisedTransaction = ({ functionName, abi, value, to, from, params, nonce, pkey, data }) => {
         var iface
         if (functionName && abi && params && !data) {
             iface = new ethers.utils.Interface(abi)
             data = iface.encodeFunctionData(functionName, params)
-            //this was using my custom en/decoder
-            // const funcObj = abi.filter(x => x.name == functionName)[0] 
-            // data = this.getFunctionData(funcObj, params)
         }
         if (!value) {
             value = 0
@@ -258,16 +248,54 @@ exports.Eth = class Eth {
             data: data,
             nonce: '0x' + (nonce).toString(16),
         }
-        // console.time("signingTx")
+
         const common = this.common
         const createdTx = Transaction.fromTxData(txParams, { common })
         const signedTx = createdTx.sign(Buffer.from(pkey, "hex"))
         const serializedTx = signedTx.serialize()
-        // console.timeEnd("signingTx")
-        // console.timeEnd("tx encoding and signing")
+        return '0x' + serializedTx.toString('hex')
+    }
+    /**
+     * 
+     * @dev if transaction data is provided, then params is not needed and no encoding is done
+     * @returns 
+     */
+    sendTransaction = async ({ functionName, abi, value, to, from, params, nonce, pkey, data }) => {
+        const serializedTx = this.getSerialisedTransaction({ functionName, abi, value, to, from, params, nonce, pkey, data })
+        // // console.time("tx encoding and signing")
+        // var iface
+        // if (functionName && abi && params && !data) {
+        //     iface = new ethers.utils.Interface(abi)
+        //     data = iface.encodeFunctionData(functionName, params)
+        //     //this was using my custom en/decoder
+        //     // const funcObj = abi.filter(x => x.name == functionName)[0] 
+        //     // data = this.getFunctionData(funcObj, params)
+        // }
+        // if (!value) {
+        //     value = 0
+        // }
+        // if (pkey.includes('0x')) {
+        //     pkey = pkey.split('0x')[1]
+        // }
+        // const txParams = {
+        //     to: to,
+        //     from: from,
+        //     gasLimit: '0x' + this.gasLimit.toString(16),
+        //     gasPrice: '0x' + this.gasPrice.toString(16),
+        //     value: '0x' + value.toString(16),
+        //     data: data,
+        //     nonce: '0x' + (nonce).toString(16),
+        // }
+        // // console.time("signingTx")
+        // const common = this.common
+        // const createdTx = Transaction.fromTxData(txParams, { common })
+        // const signedTx = createdTx.sign(Buffer.from(pkey, "hex"))
+        // const serializedTx = signedTx.serialize()
+        // // console.timeEnd("signingTx")
+        // // console.timeEnd("tx encoding and signing")
 
-        // console.time("sending tx to node")
-        const txHash = await this.sendRawTransaction('0x' + serializedTx.toString('hex'))
+        // // console.time("sending tx to node")
+        const txHash = await this.sendRawTransaction(serializedTx)
         // console.timeEnd("sending tx to node")
         return txHash
     }
