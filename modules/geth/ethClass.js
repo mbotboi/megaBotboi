@@ -48,10 +48,13 @@ exports.Eth = class Eth {
                 timeout: 2000,
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             })
-        } else if (chain === "local") {
-            this.common = Common.default.custom({ chainId: 31337 })
+        } else if (chain === "localhost") {
+            this.common = Common.default.custom({ chainId: 31337 })//1337
+
+            this.gasPrice = 1 * 10 ** 9//gwei
+            this.gasLimit = 6000000// default to 6mn. the rest will be refunded anyway
             this.ai = axios.create({
-                baseURL: "http://127.0.0.1:8545/",
+                baseURL: rpc,
                 timeout: 2000,
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
             })
@@ -108,11 +111,11 @@ exports.Eth = class Eth {
     }
 
     getBlockTransactions = async (blockNumber) => {
-        console.time('getBlockTransaction')
+        // console.time('getBlockTransaction')
         this.baseData.method = "eth_getBlockByNumber"
         this.baseData.params = ["0x" + blockNumber.toString(16), true]
         const resp = await this.ai({ method: "post", data: JSON.stringify(this.baseData) })
-        console.timeEnd('getBlockTransaction')
+        // console.timeEnd('getBlockTransaction')
         return resp.data.result
     }
 
@@ -133,7 +136,7 @@ exports.Eth = class Eth {
      * @returns 
      */
     getContractData = async ({ to, functionName, params, abi, blockNumber, from }) => {
-        console.time('fetching data custom')
+        // console.time('fetching data custom')
         blockNumber = !blockNumber ? "latest" : blockNumber
         const iface = new ethers.utils.Interface(abi)
 
@@ -151,11 +154,11 @@ exports.Eth = class Eth {
 
         const resp = await this.ai({ method: "post", data: JSON.stringify(this.baseData) })
         const res = resp.data.result
-        console.timeEnd('fetching data custom')
+        // console.timeEnd('fetching data custom')
 
-        console.time('decoding with ethers')
+        // console.time('decoding with ethers')
         const decoded = iface.decodeFunctionResult(functionName, res)
-        console.timeEnd('decoding with ethers')
+        // console.timeEnd('decoding with ethers')
         return decoded
     }
 
@@ -190,13 +193,20 @@ exports.Eth = class Eth {
         return resp.data.result //the transaction receipt object
     }
 
+    getCode = async (address) => {
+        this.baseData.method = "eth_getCode"
+        this.baseData.params = [address]
+        const resp = await this.ai({ method: "post", data: JSON.stringify(this.baseData) })
+        return resp.data.result 
+    }
+
     //WRITE FUNCTIONS----------------------------------------------------------------
     sendRawTransaction = async (signedTransaction) => {
         this.baseData.method = "eth_sendRawTransaction"
         this.baseData.params = [signedTransaction]
         const resp = await this.ai({ method: "post", data: JSON.stringify(this.baseData) })
         if (resp.data.error) {
-            return resp.data.error
+            return resp.data.error.message
         } else {
             return resp.data.result //the transaction hash
         }
@@ -262,41 +272,7 @@ exports.Eth = class Eth {
      */
     sendTransaction = async ({ functionName, abi, value, to, from, params, nonce, pkey, data }) => {
         const serializedTx = this.getSerialisedTransaction({ functionName, abi, value, to, from, params, nonce, pkey, data })
-        // // console.time("tx encoding and signing")
-        // var iface
-        // if (functionName && abi && params && !data) {
-        //     iface = new ethers.utils.Interface(abi)
-        //     data = iface.encodeFunctionData(functionName, params)
-        //     //this was using my custom en/decoder
-        //     // const funcObj = abi.filter(x => x.name == functionName)[0] 
-        //     // data = this.getFunctionData(funcObj, params)
-        // }
-        // if (!value) {
-        //     value = 0
-        // }
-        // if (pkey.includes('0x')) {
-        //     pkey = pkey.split('0x')[1]
-        // }
-        // const txParams = {
-        //     to: to,
-        //     from: from,
-        //     gasLimit: '0x' + this.gasLimit.toString(16),
-        //     gasPrice: '0x' + this.gasPrice.toString(16),
-        //     value: '0x' + value.toString(16),
-        //     data: data,
-        //     nonce: '0x' + (nonce).toString(16),
-        // }
-        // // console.time("signingTx")
-        // const common = this.common
-        // const createdTx = Transaction.fromTxData(txParams, { common })
-        // const signedTx = createdTx.sign(Buffer.from(pkey, "hex"))
-        // const serializedTx = signedTx.serialize()
-        // // console.timeEnd("signingTx")
-        // // console.timeEnd("tx encoding and signing")
-
-        // // console.time("sending tx to node")
         const txHash = await this.sendRawTransaction(serializedTx)
-        // console.timeEnd("sending tx to node")
         return txHash
     }
 

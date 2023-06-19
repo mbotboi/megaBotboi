@@ -66,7 +66,7 @@ exports.BlockListener = class BlockListener {
 /**
  * avg time to get block 272.12698412698415 - loop
  * avg time to get block 262.9633027522936 - ws
- */
+//  */
 // const getBlockLoop = async () => {
 //     const eth = new Eth('mainnet')
 //     var cachedBlock;
